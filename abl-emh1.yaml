@@ -125,8 +125,7 @@ sensor:
       name: "Reduced Duty Cycle (max_current)"
       disabled_by_default: true
     ucp_status:
-      name: "Ucp Status <= 10V"
-      disabled_by_default: true
+      name: "EV Connected (UCP <= 10V)"
     outlet_state:
       name: "Outlet state"
       disabled_by_default: true
