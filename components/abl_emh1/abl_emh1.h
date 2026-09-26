@@ -29,6 +29,10 @@ public:
   void set_charging_allowed_sensor(sensor::Sensor *charging_allowed_sensor) { charging_allowed_sensor_ = charging_allowed_sensor; }
   void set_mode_text_sensor(text_sensor::TextSensor *mode_text_sensor) { mode_text_sensor_ = mode_text_sensor; }
   void set_serial_number_text_sensor( text_sensor::TextSensor *serial_number_text_sensor) { serial_number_text_sensor_ = serial_number_text_sensor; }
+  void set_restart_current(float restart_current) {
+    restart_current_ = restart_current;
+    has_restart_current_ = true;
+  }
 
   void update() override;
   void on_emh1_modbus_data(uint16_t function, uint16_t datalength, const uint8_t *data) override;
@@ -51,6 +55,12 @@ protected:
   text_sensor::TextSensor *serial_number_text_sensor_;
   uint8_t no_response_count_ = REDISCOVERY_THRESHOLD;
   uint16_t config_age_ = CONFIG_AGE_THRESHOLD;
+  float restart_current_{NAN};
+  bool has_restart_current_{false};
+  // Starts true: on a fresh ESP boot no_response_count_ already starts at
+  // REDISCOVERY_THRESHOLD, so the very first successful status report is
+  // treated the same as a reconnect after the charger was offline.
+  bool was_offline_{true};
 
   void decode_serial_number_(const uint8_t *data, uint16_t datalength);
   void decode_status_report_(const uint8_t *data, uint16_t datalength);
