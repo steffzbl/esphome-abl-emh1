@@ -9,14 +9,21 @@ There is also a switch to enable/disable the charger.
 
 Some more output (like the serial number) is available in hidden entities.
 
-### Fork-specific: `restart_max_current`
+### Fork-specific: restore max current after a reconnect
 
-This fork adds an optional `restart_max_current` option on the `abl_emh1:`
-component. When set, it is forced onto the charger (via `send_current`)
-every time the charger (re)connects after being flagged offline - both on
-an ESP reboot and when the charger itself power-cycles/resets while the ESP
-keeps running. This is useful as a safe default, since the charger falls
-back to its own hardware default max current after a reset.
+This fork restores the max current every time the charger (re)connects
+after being flagged offline - both on an ESP reboot and when the charger
+itself power-cycles/resets while the ESP keeps running. This matters
+because the charger falls back to its own hardware default max current
+after a reset.
+
+It restores, in order:
+1. The last current that was actually commanded (e.g. via a "Max Amps"
+   number or "Allow charging" switch in Home Assistant) - kept in the ESP's
+   RAM, so this survives a charger-only reset but not an ESP reboot.
+2. If that isn't known yet (e.g. right after a fresh flash, or after the
+   ESP itself rebooted), the optional `restart_max_current` on the
+   `abl_emh1:` component, as a safe fallback default.
 
 ```yaml
 abl_emh1:
