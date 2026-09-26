@@ -1,5 +1,6 @@
 #include "abl_emh1.h"
 #include "esphome/core/log.h"
+#include <cmath>
 #include <cstdint>
 
 namespace esphome {
@@ -108,12 +109,18 @@ void ABLeMH1::decode_status_report_(const uint8_t *data, uint16_t datalength) {
   // The charger just answered successfully. If it was previously flagged
   // offline (ESP boot, or the charger itself power-cycled/reset while the
   // ESP kept running), it may have fallen back to its own hardware default
-  // max current - force our configured restart current onto it now.
+  // max current. Restore the last current we commanded (e.g. via the "Max
+  // Amps" number or "Allow charging" switch in Home Assistant) if we still
+  // know it; otherwise fall back to the configured restart current.
   if (this->was_offline_) {
     this->was_offline_ = false;
-    if (this->has_restart_current_) {
-      ESP_LOGI(TAG, "Charger (re)connected, forcing max current to %.1fA", this->restart_current_);
-      this->parent_->send_current(this->restart_current_);
+    float target = this->parent_->get_last_current();
+    if (std::isnan(target) && this->has_restart_current_) {
+      target = this->restart_current_;
+    }
+    if (!std::isnan(target)) {
+      ESP_LOGI(TAG, "Charger (re)connected, restoring max current to %.1fA", target);
+      this->parent_->send_current(target);
     }
   }
 
