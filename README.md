@@ -9,6 +9,22 @@ There is also a switch to enable/disable the charger.
 
 Some more output (like the serial number) is available in hidden entities.
 
+### Fork-specific: `restart_max_current`
+
+This fork adds an optional `restart_max_current` option on the `abl_emh1:`
+component. When set, it is forced onto the charger (via `send_current`)
+every time the charger (re)connects after being flagged offline - both on
+an ESP reboot and when the charger itself power-cycles/resets while the ESP
+keeps running. This is useful as a safe default, since the charger falls
+back to its own hardware default max current after a reset.
+
+```yaml
+abl_emh1:
+  emh1_modbus_id: modbus0
+  update_interval: 5s
+  restart_max_current: 6.0
+```
+
 ### My hardware
 - ESP-wroom 32 (esp32dev)
 - ESP GPIO pin 5 is flow-control 
