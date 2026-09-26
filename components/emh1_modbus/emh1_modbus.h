@@ -45,6 +45,10 @@ public:
 
   void send();
   void send_current(float x);
+  // Last current (in Amps) sent via send_current(), so it can be restored
+  // after the charger reconnects following a power-cycle/reset. Lives in
+  // RAM only - lost on an ESP reboot, not on a charger-only reset.
+  float get_last_current() const { return last_current_; }
   void send_enable(uint8_t x);
   void query_status_report();
   void get_serial();
@@ -64,6 +68,7 @@ protected:
   std::vector<char> rx_buffer_;
   uint32_t last_emh1_modbus_byte_{0};
   std::vector<eMH1ModbusDevice *> devices_;
+  float last_current_{NAN};
 };
 
 class eMH1ModbusDevice {
