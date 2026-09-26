@@ -104,6 +104,19 @@ void ABLeMH1::decode_status_report_(const uint8_t *data, uint16_t datalength) {
   ESP_LOGD(TAG, "Read max current value 0x%02X 0x%02X", v1, v2);
   this->publish_state_(this->max_current_sensor_, v);
   this->no_response_count_ = 0;
+
+  // The charger just answered successfully. If it was previously flagged
+  // offline (ESP boot, or the charger itself power-cycled/reset while the
+  // ESP kept running), it may have fallen back to its own hardware default
+  // max current - force our configured restart current onto it now.
+  if (this->was_offline_) {
+    this->was_offline_ = false;
+    if (this->has_restart_current_) {
+      ESP_LOGI(TAG, "Charger (re)connected, forcing max current to %.1fA", this->restart_current_);
+      this->parent_->send_current(this->restart_current_);
+    }
+  }
+
   // read charging allowed status after processing status report,
   // because emh1_modbus cannot send / receive simultaneously
   this->get_charging_allowed();
@@ -147,6 +160,7 @@ void ABLeMH1::update() {
   }
   if (this->no_response_count_ >= REDISCOVERY_THRESHOLD) {
     this->publish_device_offline_();
+    this->was_offline_ = true;
     ESP_LOGD(TAG, "The device is or was offline. Broadcasting discovery for address configuration...");
     this->get_serial();
     // this->query_device_info(this->address_);
