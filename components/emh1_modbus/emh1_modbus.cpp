@@ -213,6 +213,7 @@ void eMH1Modbus::send_charging_disable() {
 // set Max current
 void eMH1Modbus::send_current(float x) {
   ESP_LOGD(TAG, "Set Max Current to %.1f Amps", x);
+  this->last_current_ = x;
   send_duty_cycle(std::floor(x / 0.06));
 }
 
