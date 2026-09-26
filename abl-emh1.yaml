@@ -1,7 +1,7 @@
 substitutions:
   name: abl_emh1
   device_description: "Monitor and configure ABL eMH1 Charger via RS485/Modbus-ASCII"
-  external_components_source: github://jrv/esphome-abl-emh1@main
+  external_components_source: github://steffzbl/esphome-abl-emh1@main
   tx_pin: "17"
   rx_pin: "16"
   flow_control_pin: "5"
@@ -56,6 +56,10 @@ emh1_modbus:
 abl_emh1:
   emh1_modbus_id: modbus0
   update_interval: 5s
+  # Fallback max current used only when we don't yet know what was last
+  # commanded (e.g. right after a fresh flash). After that, reconnects
+  # restore whatever was last set instead. See README.
+  restart_max_current: 6.0
 
 preferences:
   flash_write_interval: 5min
@@ -164,11 +168,11 @@ switch:
     lambda: 'return (id(outlet_state).state != 0xE0);'
     turn_off_action:
       - lambda: |-
-          if ((id(abl_uptime).state > 10.0) && (id(outlet_state).state != NAN))
+          if ((id(abl_uptime).state > 10.0) && (!std::isnan(id(outlet_state).state)))
             id(modbus0)->send_enable(0);
     turn_on_action:
       - lambda: |-
-          if ((id(abl_uptime).state > 10.0) && (id(outlet_state).state != NAN))
+          if ((id(abl_uptime).state > 10.0) && (!std::isnan(id(outlet_state).state)))
             id(modbus0)->send_enable(1);
   - platform: template
     name: "Allow charging"
@@ -178,13 +182,13 @@ switch:
     lambda: 'return id(charging_allowed).state == 1;'
     turn_on_action:
       - lambda: |-
-          if (id(outlet_state).state == NAN) return;
+          if (std::isnan(id(outlet_state).state)) return;
           int state = std::roundl(id(charging_allowed).state);
           ESP_LOGD("main", "Allow charging turn on. Current state is: %d", state);
           if (state <= 0) id(modbus0)->send_current(${wallbox_max_current});
     turn_off_action:
       - lambda: |-
-          if (id(outlet_state).state == NAN) return;
+          if (std::isnan(id(outlet_state).state)) return;
           int state = std::roundl(id(charging_allowed).state);
           ESP_LOGD("main", "Allow charging turn off. Current state is: %d", state);
           if (state > 0) id(modbus0)->send_charging_disable();
