@@ -1,0 +1,11 @@
+{
+  "name": "abl-emh3-iem3155-docs",
+  "version": "1.0.0",
+  "description": "Genereert aansluitschema en handleiding voor ABL eMH3 + Schneider iEM3155",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "docx": "^9.8.1"
+  }
+}
